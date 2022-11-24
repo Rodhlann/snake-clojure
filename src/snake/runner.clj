@@ -1,39 +1,37 @@
 (ns snake.runner
-  (:require [clojure.core.async :refer [<! timeout chan go go-loop offer! poll!]]
-            [snake.config :refer [height width]])
-  (:import jline.Terminal))
+  (:require [clojure.core.async :refer [<!! >! chan go go poll! timeout]]
+            [snake.config :refer [down height left right up width]])
+  (:import jline.Terminal)
+  (:gen-class))
+
+(def input-channel (chan 1))
 
 (defn init-snake
   []
   [(int (quot width 1.25)),
    (int (quot height 1.25)),
-  ;; TODO: randomize starting location
-  ;; [rand-int 0 (int (quot width 1.25)),
-  ;;  rand-int 0 (int (quot height 1.25)),
-   119])
+   up]) ;; Default to up direction
 
-(def input-channel (chan))
-
-; TODO: don't stop on input, we just want it to passively grab last pressed key
+;; TODO: figure out how to clear terminal buffer or only pick last char, currently if the user holds down a key it will continue reading that stream indefinitely
+;; Maybe iterate through the entire terminal buffer, leaving only the latest option for the input-channel?
 (defn watch-input []
-  (go-loop []
-    (<! (timeout 1000))
+  (<!! (timeout 1000))
+  (go
     (let [term (Terminal/getTerminal)]
-     (offer! input-channel (.readCharacter term System/in)))
-    (recur)))
+      (>! input-channel (.readCharacter term System/in)))))
 
 (defn take-input []
+  (println (str "buff: " (.count (.buf input-channel))))
   (poll! input-channel))
 
 (defn update-location [key, snake]
-  (println key)
-  (case key
-    ; TODO: Stop user from redirecting to opposite of current direction
-    119 [(get snake 0), (- (get snake 1) 1), key] ;w
-    115 [(get snake 0), (+ (get snake 1) 1), key] ;s
-    97  [(- (get snake 0) 1), (get snake 1), key] ;a
-    100 [(+ (get snake 0) 1), (get snake 1), key] ;d
-    (update-location (get snake 2) snake)))
+  (println (str "key: " key))
+  (cond
+    (and (= key up) (not= (get snake 2) down)) [(get snake 0), (- (get snake 1) 1), key]
+    (and (= key down) (not= (get snake 2) up)) [(get snake 0), (+ (get snake 1) 1), key]
+    (and (= key left) (not= (get snake 2) right)) [(- (get snake 0) 1), (get snake 1), key]
+    (and (= key right) (not= (get snake 2) left)) [(+ (get snake 0) 1), (get snake 1), key]
+    :else (update-location (get snake 2) snake)))
 
 (defn game-over [snake]
   (cond
@@ -46,6 +44,4 @@
 
 (defn update-snake [snake]
   (game-over
-   (update-location
-    (take-input)
-    snake)))
+   (update-location (take-input) snake)))

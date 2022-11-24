@@ -4,7 +4,7 @@
 
 ### Run Jar
 
-`$ lein jar`
+`$ lein uberjar`
 
 `$ java -jar target/default/snake-0.1.0-standalone.jar`
 
