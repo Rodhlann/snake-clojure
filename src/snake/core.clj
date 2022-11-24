@@ -5,7 +5,6 @@
 
 (defn -main
   [& args]
-  ;; (watch-input)
   (loop [snake (init-snake)]
     (println "-------")
     (println (str "snake: " snake))
