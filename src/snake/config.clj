@@ -8,6 +8,8 @@
 (def left 97)
 (def right 100)
 
+(def tail-length 0)
+
 ;; TODO: randomize starting location
 ;; [rand-int 0 (int (quot width 1.25)),
 ;;  rand-int 0 (int (quot height 1.25)),
