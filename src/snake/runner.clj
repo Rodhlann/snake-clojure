@@ -64,4 +64,5 @@
 
 (defn snake-runner [snake]
   (game-over
-   (update-location (take-input) snake)))
+   (update-location (take-input) snake))) ;; TODO: refactor update-location into multiple isolated units
+;; TODO: create target
