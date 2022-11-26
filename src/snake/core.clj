@@ -1,6 +1,6 @@
 (ns snake.core
   (:require
-   [snake.runner :refer [init-snake update-snake watch-input]])
+   [snake.runner :refer [init-snake snake-runner watch-input]])
   (:gen-class))
 
 (defn -main
@@ -10,5 +10,5 @@
     (println (str "snake: " snake))
     (watch-input)
     (when (seq snake)
-      (recur (update-snake snake))))
+      (recur (snake-runner snake))))
   (println "Game Over"))

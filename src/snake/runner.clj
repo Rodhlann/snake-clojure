@@ -25,23 +25,27 @@
   (println (str "buff: " (.count (.buf input-channel))))
   (poll! input-channel))
 
+(defn update-snake [x, y, key, snake]
+  (let [tail-length (get snake 3)]
+    [x, y, key, tail-length, 
+     (or 
+      (take tail-length (into (get snake 4) [[(get snake 0), (get snake 1)]])) 
+      [])]))
+
 (defn update-location [key, snake]
   (println (str "key: " key))
   (cond
-    ;; TODO: Update tail-length value to not be hard-coded 0
-    ;; TODO: Partition tail based on tail-length value
-    ;; TODO: Break this out into separate sub-functions
-    (and (= key up) (not= (get snake 2) down)) [(get snake 0), (- (get snake 1) 1), key, 0, (into (get snake 4) [[(get snake 0), (get snake 1)]])]
-    (and (= key down) (not= (get snake 2) up)) [(get snake 0), (+ (get snake 1) 1), key, 0, (into (get snake 4) [[(get snake 0), (get snake 1)]])]
-    (and (= key left) (not= (get snake 2) right)) [(- (get snake 0) 1), (get snake 1), key, 0, (into (get snake 4) [[(get snake 0), (get snake 1)]])]
-    (and (= key right) (not= (get snake 2) left)) [(+ (get snake 0) 1), (get snake 1), key, 0, (into (get snake 4) [[(get snake 0), (get snake 1)]])]
+    (and (= key up) (not= (get snake 2) down)) (update-snake (get snake 0) (- (get snake 1) 1) key snake)
+    (and (= key down) (not= (get snake 2) up)) (update-snake (get snake 0) (+ (get snake 1) 1) key snake)
+    (and (= key left) (not= (get snake 2) right)) (update-snake (- (get snake 0) 1) (get snake 1) key snake)
+    (and (= key right) (not= (get snake 2) left)) (update-snake (+ (get snake 0) 1) (get snake 1) key snake)
     :else (update-location (get snake 2) snake)))
 
 (defn check-tail-collision [snake]
   (println snake)
   (let [coord [(get snake 0), (get snake 1)]
         tail (get snake 4)]
-    (some? (some #{coord} tail))))
+    (some #{coord} tail)))
 
 (defn check-wall-collision [snake]
   (or
@@ -58,6 +62,6 @@
     (nil? (get snake 0))) ;; TODO: clarify this check 
     [] snake))
 
-(defn update-snake [snake]
+(defn snake-runner [snake]
   (game-over
    (update-location (take-input) snake)))
