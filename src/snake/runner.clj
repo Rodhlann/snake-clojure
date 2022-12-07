@@ -1,8 +1,12 @@
 (ns snake.runner
-  (:require [clojure.core.async :refer [<!! >! chan go go poll! timeout]]
+  (:require [clojure.core :refer [rand-int]]
+            [clojure.core.async :refer [<!! >! chan go go poll! timeout]]
             [snake.config :refer [down height left tail-length right up width]])
   (:import jline.Terminal)
   (:gen-class))
+
+(defn new-point []
+  [(rand-int width), (rand-int height)])
 
 (def input-channel (chan 1))
 
@@ -11,7 +15,8 @@
    (int (quot height 1.25)),   ;; Default y coord
    up,                         ;; Default dir = up
    tail-length,                ;; Default tail-length value
-   []])                        ;; Default empty tail
+   [],                         ;; Default empty tail
+   (new-point)])               ;; Random point location         
 
 ;; TODO: figure out how to clear terminal buffer or only pick last char, currently if the user holds down a key it will continue reading that stream indefinitely
 ;; Maybe iterate through the entire terminal buffer, leaving only the latest option for the input-channel?
@@ -30,7 +35,8 @@
     [x, y, key, tail-length, 
      (or 
       (take tail-length (into (get snake 4) [[(get snake 0), (get snake 1)]])) 
-      [])]))
+      []),
+     (get snake 5)]))
 
 (defn update-location [key, snake]
   (println (str "key: " key))
@@ -60,9 +66,16 @@
     (check-wall-collision snake)
     (check-tail-collision snake)
     (nil? (get snake 0))) ;; TODO: clarify this check 
-    [] snake))
+    (get snake 3) snake)) ;; If game over return score
+
+(defn check-score [snake]
+  (let [x (get snake 0) y (get snake 1) point (get snake 5)]
+   (if (= [x, y] point)
+    [x, y, (get snake 2), (+ (get snake 3) 1), (get snake 4), (new-point)]
+    snake)))
 
 (defn snake-runner [snake]
   (game-over
-   (update-location (take-input) snake))) ;; TODO: refactor update-location into multiple isolated units
+   (check-score
+    (update-location (take-input) snake)))) ;; TODO: refactor update-location into multiple isolated units
 ;; TODO: create target
